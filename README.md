@@ -23,7 +23,7 @@ Dependencies:
 
   * go-1.6
   * Everything required to build Monero
-  * Monero >= **v0.14.0.0** (sometimes `master` branch required)
+  * Monero >= **v0.14.0.2** (sometimes `master` branch required)
 
 ### Linux
 
@@ -31,10 +31,10 @@ Use Ubuntu 16.04 LTS.
 
 Compile Monero source (with shared libraries option):
 
-    apt-get install git cmake build-essential libssl-dev pkg-config libboost-all-dev
+    sudo apt-get install git cmake build-essential libssl-dev pkg-config libboost-all-dev
     git clone https://github.com/monero-project/monero.git
     cd monero
-    git checkout tags/v0.14.0.0 -b v0.14.0.0
+    git checkout tags/v0.14.0.2 -b v0.14.0.2
     cmake -DBUILD_SHARED_LIBS=1 .
     make
 
@@ -44,15 +44,27 @@ Install Golang and required packages:
 
 Clone stratum:
 
-    git clone https://github.com/sammy007/monero-stratum.git
+    git clone https://github.com/nb6c/monero-stratum.git
     cd monero-stratum
 
 Build stratum:
 
-    MONERO_DIR=/path/to/monero cmake .
+    CURUSER=$(whoami)
+    MONERO_DIR=/home/$CURUSER/monero cmake .
     make
 
 `MONERO_DIR=/path/to/monero` is optional, not needed if both `monero` and `monero-stratum` is in the same directory like `/opt/src/`. By default make will search for monero libraries in `../monero`. You can just run `cmake .`.
+
+When you get an error like 'package context: unrecognized import path "context" (import path does not begin with hostname)', see https://github.com/golang/dep/issues/1985 .
+
+    sudo apt-get purge golang*
+    sudo rm -rf /usr/lib/go-1.6/ /usr/lib/go-1.6/src/ /usr/lib/go-1.6/src/runtime/ /usr/lib/go-1.6/src/runtime/race
+    curl -O https://storage.googleapis.com/golang/go1.11.1.linux-amd64.tar.gz
+    sudo tar -C /usr/local -xzf go1.11.1.linux-amd64.tar.gz
+    mkdir -p ~/go; echo "export GOPATH=$HOME/go" >> ~/.bashrc
+    echo "export PATH=$PATH:$HOME/go/bin:/usr/local/go/bin" >> ~/.bashrc
+    source ~/.bashrc
+
 
 ### Mac OS X
 
@@ -86,6 +98,22 @@ If you need to bind to privileged ports and don't want to run from `root`:
 
     sudo apt-get install libcap2-bin
     sudo setcap 'cap_net_bind_service=+ep' /path/to/monero-stratum
+    
+To run monero-stratum as a service :
+
+    CURUSER=$(whoami)
+    sed -e "s/__USER__/$CURUSER/g" monero-stratum.service | sudo tee /lib/systemd/system/monero-stratum.service >/dev/null
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable monero-stratum
+    sudo systemctl start monero-stratum
+    
+    To check status :
+        sudo systemctl status monero-stratum
+    
+    To stop service :
+        sudo systemctl stop monero-stratum
+    
 
 ## Configuration
 
@@ -148,7 +176,8 @@ Configuration is self-describing, just copy *config.example.json* to *config.jso
     }
   ],
   
-  "statsDir": "stats"
+  "statsDir": "stats",
+  "statsInterval": 5
 }
 ```
 
