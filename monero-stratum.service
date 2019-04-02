@@ -1,0 +1,16 @@
+[Unit]
+Description=Monero Stratum Daemon
+After=network.target
+
+[Service]
+Type=simple
+GuessMainPID=no
+ExecStart=/home/__USER__/monero-stratum/build/bin/monero-stratum config.json
+WorkingDirectory=/home/__USER__/monero-stratum
+User=__USER__
+Restart=on-failure
+RestartSec=10
+startLimitIntervalSec=10
+
+[Install]
+WantedBy=multi-user.target
